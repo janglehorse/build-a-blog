@@ -9,7 +9,8 @@
 # Your templates extend a base.html template which includes some boilerplate HTML that will be used on each page,
 # along with some styles to clean up your blog's visuals a bit (you can copy/paste the styles from the AsciiChan exercise).
 # You're able to submit a new post at the /newpost route/view.
-# After submitting a new post, your app displays the main blog page. Note that, as with the AsciiChan example, you will likely need to refresh the main blog page to see your new post listed.
+# After submitting a new post, your app displays the main blog page.
+# Note that, as with the AsciiChan example, you will likely need to refresh the main blog page to see your new post listed.
 # If either title or body is left empty in the new post form, the form is rendered again,
 # with a helpful error message and any previously-entered content in the same form inputs.
 #
@@ -17,6 +18,8 @@
 import os
 import webapp2
 import jinja2
+
+from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
@@ -32,9 +35,38 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+# class Art(db.Model):
+    # title = db.StringProperty(required=True)
+    # art = db.TextProperty(required = True)
+    # created = db.DateTimeProperty(auto_now_add = True)
+
+class Entry(db.Model):
+    title = db.StringProperty(required=True)
+    entry = db.TextProperty(required = True)
+    creaded = db.DateTimeProperty(auto_now_add = True)
+
 class MainHandler(Handler):
+    # def render_front(self, title="", entry="", error=""):
+    #     entries = db.GqlQuery("SELECT * FROM Entry"
+    #                           "ORDER BY created DESC")
+    #
+    #     self.render('new-post.html', title=title, entry=entry, error=error, entries=entries)
+
     def get(self):
         self.render('new-post.html')
+
+    def post(self):
+        title = self.request.get("title")
+        new_entry = self.request.get("new_entry")
+
+        if not title or not new_entry:
+            error = "Please provide a title and an entry."
+            self.render('new-post.html', title=title, new_entry= new_entry, error=error)
+        else:
+            e = Entry(title = title, entry=new_entry)
+            e.put()
+
+            self.redirect("/")
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
