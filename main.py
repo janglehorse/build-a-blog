@@ -52,23 +52,27 @@ class MainHandler(Handler):
     def get(self):
         entries = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC LIMIT 5")
 
-        self.render('new-post.html', entries=entries)
+        self.render('main.html', entries=entries)
+
+class NewPostHandler(Handler):
+
+    def get(self):
+        self.render('new-post.html')
 
     def post(self):
         title = self.request.get("title")
         new_entry = self.request.get("new_entry")
-        entries = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC LIMIT 5")
-
 
         if not title or not new_entry:
             error = "Please provide a title and an entry."
-            self.render('new-post.html', title=title, new_entry=new_entry, error=error, entries=entries)
+            self.render('new-post.html', title=title, new_entry=new_entry, error=error)
         else:
             e = Entry(title=title, entry=new_entry)
             e.put()
 
-            self.redirect("/")
+            self.redirect('/blog')
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/blog', MainHandler),
+    ('/newpost', NewPostHandler)
 ], debug=True)

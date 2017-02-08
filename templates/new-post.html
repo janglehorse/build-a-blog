@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form action="/" method="post">
+<form action="/newpost" method="post">
     <label>Title</label>
     <input type="text" name="title" value="{{title}}"/>
     <label>New Post</label>
@@ -11,10 +11,6 @@
     <div class="error">{{error}}</div>
 </form>
 
-{% for entry in entries %}
-<h2>{{entry.title}}</h2>
-<p>created on: {{entry.created}}</p>
-<p>{{entry.entry}}</p>
-{% endfor %}
+
 
 {% endblock %}
