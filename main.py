@@ -54,6 +54,7 @@ class MainHandler(Handler):
 
         self.render('main.html', entries=entries)
 
+
 class NewPostHandler(Handler):
 
     def get(self):
@@ -72,7 +73,21 @@ class NewPostHandler(Handler):
 
             self.redirect('/blog')
 
+
+class ViewPostHandler(Handler):
+    def get(self, id):
+        #self.write(id)
+        #TODO:
+        #Find webapp2 methods to return item using ID
+        #new_entry = webapp2.methodThatReturnsID()
+        e = Entry.get_by_id(int(id))
+        #create new template, view-post.html which receives new_entry.title and new_entry.entry
+        self.render("view-post.html", e=e)
+        #render view-post.html
+
+
 app = webapp2.WSGIApplication([
     ('/blog', MainHandler),
-    ('/newpost', NewPostHandler)
+    ('/newpost', NewPostHandler),
+    webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)
