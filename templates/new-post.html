@@ -11,4 +11,10 @@
     <div class="error">{{error}}</div>
 </form>
 
+{% for entry in entries %}
+<h2>{{entry.title}}</h2>
+<p>created on: {{entry.created}}</p>
+<p>{{entry.entry}}</p>
+{% endfor %}
+
 {% endblock %}
