@@ -43,16 +43,30 @@ class Entry(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
 
 class MainHandler(Handler):
-    # def render_front(self, title="", entry="", error=""):
-    #     entries = db.GqlQuery("SELECT * FROM Entry"
-    #                           "ORDER BY created DESC")
-    #
-    #     self.render('new-post.html', title=title, entry=entry, error=error, entries=entries)
+
+    def get_posts(self, limit, offset):
+        # TODO: query the database for posts, and return them
+        e = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC LIMIT {limit} OFFSET {offset}".format(limit=limit, offset=offset))
+        return e
 
     def get(self):
-        entries = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC LIMIT 5")
 
-        self.render('main.html', entries=entries)
+        page = self.request.get("page")
+        pagesize = 5
+
+        if not page:
+            page = 1
+            e = self.get_posts(pagesize, 0)
+            self.render('main.html', entries = e, next_page=page+1, page=page, offset = 0)
+        else:
+            page = int(page)
+
+            offset = int(page) * (pagesize - 1)
+
+            e = self.get_posts(pagesize, offset)
+
+            self.render('main.html', entries = e, page=page, offset=offset, prev_page = page-1, next_page = page+1)
+
 
 
 class NewPostHandler(Handler):

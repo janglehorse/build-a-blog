@@ -7,4 +7,15 @@
 <p>{{entry.entry}}</p>
 {% endfor %}
 
+{% if page > 1: %}
+<a href="/blog?page={{prev_page}}">&lt; prev</a>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+{% endif %}
+<a href="/blog?page={{next_page}}"> next&gt;</a>
+
+<p><h3>You're on Page {{page}}</h3></p>
+<p><h3>And the Offset you queried is {{offset}}</h3></p>
+
+
+
 {% endblock %}
