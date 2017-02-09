@@ -1,20 +1,3 @@
-# First, set up the blog so that the new post form and the post listing are on the same page,
-# as with AsciiChan, and then separate those portions into separate routes, handler classes, and templates.
-# For now, when a user submits a new post, redirect them to the main blog page.
-
-# Make sure you can say the following about your app:
-#
-# The /blog route displays the 5 most recent posts. You'll need to filter the query results.
-# You have two templates, one for each of the main blog and new post views.
-# Your templates extend a base.html template which includes some boilerplate HTML that will be used on each page,
-# along with some styles to clean up your blog's visuals a bit (you can copy/paste the styles from the AsciiChan exercise).
-# You're able to submit a new post at the /newpost route/view.
-# After submitting a new post, your app displays the main blog page.
-# Note that, as with the AsciiChan example, you will likely need to refresh the main blog page to see your new post listed.
-# If either title or body is left empty in the new post form, the form is rendered again,
-# with a helpful error message and any previously-entered content in the same form inputs.
-
-
 import os
 import webapp2
 import jinja2
@@ -46,7 +29,8 @@ class MainHandler(Handler):
 
     def get_posts(self, limit, offset):
         # TODO: query the database for posts, and return them
-        e = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC LIMIT {limit} OFFSET {offset}".format(limit=limit, offset=offset))
+        e = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC "
+                        "LIMIT {limit} OFFSET {offset}".format(limit=limit, offset=offset))
         return e
 
     def get(self):
@@ -54,18 +38,16 @@ class MainHandler(Handler):
         page = self.request.get("page")
         pagesize = 5
 
-        if not page:
+        if not page or int(page) <=1:
             page = 1
-            e = self.get_posts(pagesize, 0)
-            self.render('main.html', entries = e, next_page=page+1, page=page, offset = 0)
+            offset = 0
         else:
             page = int(page)
+            offset = int(page) * (pagesize)
 
-            offset = int(page) * (pagesize - 1)
+        e = self.get_posts(pagesize, offset)
 
-            e = self.get_posts(pagesize, offset)
-
-            self.render('main.html', entries = e, page=page, offset=offset, prev_page = page-1, next_page = page+1)
+        self.render('main.html', entries = e, page=page, offset=offset, prev_page = page-1, next_page = page+1)
 
 
 
@@ -84,8 +66,8 @@ class NewPostHandler(Handler):
         else:
             e = Entry(title=title, entry=new_entry)
             e.put()
-
-            self.redirect('/blog')
+            link_id = e.key().id()
+            self.redirect('/blog/{}'.format(link_id))
 
 
 class ViewPostHandler(Handler):
