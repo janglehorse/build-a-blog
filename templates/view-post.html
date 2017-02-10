@@ -5,4 +5,8 @@
 <h2>{{e.title}}</h2>
 <p>{{e.entry}}</p>
 
+<form action="/edit/{{entry_id}}" method="get">
+    <button type="submit">Edit</button>
+</form>
+
 {% endblock %}

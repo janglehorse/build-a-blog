@@ -77,13 +77,39 @@ class ViewPostHandler(Handler):
         #Find webapp2 methods to return item using ID
         #new_entry = webapp2.methodThatReturnsID()
         e = Entry.get_by_id(int(id))
+        entry_id = int(id)
         #create new template, view-post.html which receives new_entry.title and new_entry.entry
-        self.render("view-post.html", e=e)
-        #render view-post.html
+        self.render("view-post.html", e=e, entry_id=entry_id)
+
+class EditHandler(Handler):
+
+    def get(self, id):
+
+        e = Entry.get_by_id(int(id))
+        entry_id = int(id)
+        self.render("edit-post.html", e=e, entry_id=entry_id)
+
+    def post(self, id):
+
+        title = self.request.get("title")
+        new_entry = self.request.get("new_entry")
+
+        if not title or not new_entry:
+            error = "Please provide a title and an entry."
+            self.render('new-post.html', title=title, new_entry=new_entry, error=error)
+        else:
+            e = Entry.get_by_id(int(id))
+            #e = Entry(title=title, entry=new_entry)
+            e.title = title
+            e.entry = new_entry
+            e.put()
+
+            self.redirect('/blog/{}'.format(id))
 
 
 app = webapp2.WSGIApplication([
     ('/blog', MainHandler),
     ('/newpost', NewPostHandler),
-    webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
+    webapp2.Route('/blog/<id:\d+>', ViewPostHandler),
+    webapp2.Route('/edit/<id:\d+>', EditHandler)
 ], debug=True)
