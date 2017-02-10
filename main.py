@@ -43,7 +43,7 @@ class MainHandler(Handler):
             offset = 0
         else:
             page = int(page)
-            offset = int(page) * (pagesize)
+            offset = int(page) * (pagesize) - 5
 
         e = self.get_posts(pagesize, offset)
 
