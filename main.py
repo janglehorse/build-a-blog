@@ -1,23 +1,7 @@
-# First, set up the blog so that the new post form and the post listing are on the same page,
-# as with AsciiChan, and then separate those portions into separate routes, handler classes, and templates.
-# For now, when a user submits a new post, redirect them to the main blog page.
-
-# Make sure you can say the following about your app:
-#
-# The /blog route displays the 5 most recent posts. You'll need to filter the query results.
-# You have two templates, one for each of the main blog and new post views.
-# Your templates extend a base.html template which includes some boilerplate HTML that will be used on each page,
-# along with some styles to clean up your blog's visuals a bit (you can copy/paste the styles from the AsciiChan exercise).
-# You're able to submit a new post at the /newpost route/view.
-# After submitting a new post, your app displays the main blog page.
-# Note that, as with the AsciiChan example, you will likely need to refresh the main blog page to see your new post listed.
-# If either title or body is left empty in the new post form, the form is rendered again,
-# with a helpful error message and any previously-entered content in the same form inputs.
-#
-
 import os
 import webapp2
 import jinja2
+
 
 from google.appengine.ext import db
 
@@ -35,22 +19,39 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
-# class Art(db.Model):
-    # title = db.StringProperty(required=True)
-    # art = db.TextProperty(required = True)
-    # created = db.DateTimeProperty(auto_now_add = True)
 
 class Entry(db.Model):
     title = db.StringProperty(required=True)
     entry = db.TextProperty(required = True)
-    creaded = db.DateTimeProperty(auto_now_add = True)
+    created = db.DateTimeProperty(auto_now_add = True)
 
 class MainHandler(Handler):
-    # def render_front(self, title="", entry="", error=""):
-    #     entries = db.GqlQuery("SELECT * FROM Entry"
-    #                           "ORDER BY created DESC")
-    #
-    #     self.render('new-post.html', title=title, entry=entry, error=error, entries=entries)
+
+    def get_posts(self, limit, offset):
+        # TODO: query the database for posts, and return them
+        e = db.GqlQuery("SELECT * FROM Entry ORDER BY created DESC "
+                        "LIMIT {limit} OFFSET {offset}".format(limit=limit, offset=offset))
+        return e
+
+    def get(self):
+
+        page = self.request.get("page")
+        pagesize = 5
+
+        if not page or int(page) <=1:
+            page = 1
+            offset = 0
+        else:
+            page = int(page)
+            offset = int(page) * (pagesize)
+
+        e = self.get_posts(pagesize, offset)
+
+        self.render('main.html', entries = e, page=page, offset=offset, prev_page = page-1, next_page = page+1)
+
+
+
+class NewPostHandler(Handler):
 
     def get(self):
         self.render('new-post.html')
@@ -61,13 +62,28 @@ class MainHandler(Handler):
 
         if not title or not new_entry:
             error = "Please provide a title and an entry."
-            self.render('new-post.html', title=title, new_entry= new_entry, error=error)
+            self.render('new-post.html', title=title, new_entry=new_entry, error=error)
         else:
-            e = Entry(title = title, entry=new_entry)
+            e = Entry(title=title, entry=new_entry)
             e.put()
+            link_id = e.key().id()
+            self.redirect('/blog/{}'.format(link_id))
 
-            self.redirect("/")
+
+class ViewPostHandler(Handler):
+    def get(self, id):
+        #self.write(id)
+        #TODO:
+        #Find webapp2 methods to return item using ID
+        #new_entry = webapp2.methodThatReturnsID()
+        e = Entry.get_by_id(int(id))
+        #create new template, view-post.html which receives new_entry.title and new_entry.entry
+        self.render("view-post.html", e=e)
+        #render view-post.html
+
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/blog', MainHandler),
+    ('/newpost', NewPostHandler),
+    webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)
